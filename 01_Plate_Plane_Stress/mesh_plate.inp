@@ -1,0 +1,27 @@
+*Heading
+ mesh_plate.inp
+*NODE
+1, 0, 0, 0
+2, 2, 0, 0
+3, 2, 2, 0
+4, 0, 2, 0
+5, 0.99999999999738, 0, 0
+6, 1.0000000000041, 2, 0
+******* E L E M E N T S *************
+*ELEMENT, type=T3D2, ELSET=Line1
+1, 1, 5
+2, 5, 2
+*ELEMENT, type=T3D2, ELSET=Line2
+3, 2, 3
+*ELEMENT, type=T3D2, ELSET=Line3
+4, 3, 6
+5, 6, 4
+*ELEMENT, type=T3D2, ELSET=Line4
+6, 4, 1
+*ELEMENT, type=CPS4, ELSET=Surface1
+7, 1, 5, 6, 4
+8, 5, 2, 3, 6
+*ELSET,ELSET=PhysicalLine5
+1, 2, 3, 4, 5, 6, 
+*ELSET,ELSET=My_surface
+7, 8, 
