@@ -1,0 +1,100 @@
+
+DEBUT();
+
+
+MAIL=LIRE_MAILLAGE(
+    INFO=1,
+    UNITE=20,
+    FORMAT='ASTER',);
+
+
+MAIL = DEFI_GROUP(reuse = MAIL,
+		 MAILLAGE = MAIL, 
+		 CREA_GROUP_MA = (_F(NOM = 'TANK',
+				     TOUT = 'OUI',),),)
+
+MAIL = MODI_MAILLAGE(reuse=MAIL,
+                     MAILLAGE=MAIL,
+                     ORIE_NORM_COQUE=(_F(GROUP_MA='F_SUP_L',
+                                        GROUP_NO='F_SUP_L',
+                                        VECT_NORM=(0, -1.0, 0.0)),
+				      _F(GROUP_MA='F_SUP_R',
+                                        GROUP_NO='F_SUP_R',
+                                        VECT_NORM=(0,-1.0, 0.0)),
+				      _F(GROUP_MA='F_INF_L',
+                                        GROUP_NO='F_INF_L',
+                                        VECT_NORM=(0, 1.0, 0.0)),
+				      _F(GROUP_MA='F_INF_R',
+                                        GROUP_NO='F_INF_R',
+                                        VECT_NORM=(0, 1.0, 0.0)),)),
+
+MO=AFFE_MODELE(MAILLAGE=MAIL,
+               INFO=1,
+               AFFE=(_F(TOUT='OUI',
+                        PHENOMENE='MECANIQUE',
+                        MODELISATION='DKT',),),);
+
+CAEL = AFFE_CARA_ELEM(MODELE=MO,
+                    COQUE=_F(EPAIS=0.08,
+                    GROUP_MA= 'TANK',))
+
+ACIER=DEFI_MATERIAU(ELAS=_F(E=210E9,
+                              NU=0.3,),)
+
+
+
+MATER=AFFE_MATERIAU(MAILLAGE=MAIL,
+                    AFFE=(_F(TOUT='OUI',
+                             MATER=ACIER,),),)
+
+PHYDR = DEFI_FONCTION(NOM_PARA='Z',
+                      NOM_RESU='TOUTRESU',
+                      VALE=(0.0, 5E4, 5.0, 0.0))
+
+
+PH = AFFE_CHAR_MECA_F(FORCE_COQUE=(_F(GROUP_MA='F_SUP_L',
+                                     PLAN='INF',
+                                     PRES=PHYDR),
+				   _F(GROUP_MA='F_SUP_R',
+                                     PLAN='INF',
+                                     PRES=PHYDR),
+			           _F(GROUP_MA='F_INF_L',
+                                     PLAN='INF',
+                                     PRES=PHYDR),
+				   _F(GROUP_MA='F_INF_R',
+                                     PLAN='INF',
+                                     PRES=PHYDR),),
+                      MODELE=MO)
+			 
+COND_0=AFFE_CHAR_MECA(MODELE=MO,
+                      DDL_IMPO=(
+				_F(NOEUD=('N2',),
+                    DZ = 0.0,
+                    DX = 0.0,),
+				_F(NOEUD=('N3',),
+                    DZ = 0.0,
+                    DX = 0.0),
+				_F(NOEUD=('N5',),
+                    DY=0.0,
+                    DZ = 0,),
+				_F(NOEUD=('N4'),
+                    DZ = 0.0,
+                    DY = 0.0)),
+		     PRES_REP =(_F(GROUP_MA = 'BOTTOM',
+				    PRES = 5E4),),),
+
+
+RESU = MECA_STATIQUE(MODELE=MO,
+                       CHAM_MATER=MATER,
+                       CARA_ELEM=CAEL,
+                       EXCIT=(_F(CHARGE=COND_0,),
+                              _F(CHARGE=PH,),))
+
+
+RESU = CALC_CHAMP(reuse = RESU, 
+                  RESULTAT = RESU, 
+                  CONTRAINTE = ('SIGM_ELNO','EFGE_ELNO'))
+
+IMPR_RESU(FORMAT = 'MED', RESU = _F(RESULTAT = RESU),UNITE=8,),
+
+FIN();
